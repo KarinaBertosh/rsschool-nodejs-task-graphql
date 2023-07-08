@@ -20,15 +20,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<MemberTypeEntity> {
-      const user = await fastify.db.memberTypes.findOne({
+      const types = await fastify.db.memberTypes.findOne({
         key: 'id',
         equals: request.params.id,
       });
-      switch (user) {
-        case undefined:
-          throw fastify.httpErrors.createError(404, 'User not found');
-        default:
-          return user!;
+      if (types) {
+        return types;
+      } else {
+        throw fastify.httpErrors.createError(404, 'User not found');
       }
     }
   );
@@ -42,15 +41,17 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<MemberTypeEntity> {
-      const user = await fastify.db.memberTypes.findOne({
+      const types = await fastify.db.memberTypes.findOne({
         key: 'id',
         equals: request.params.id,
       });
-      switch (user) {
-        case undefined:
-          throw fastify.httpErrors.createError(400, 'User not subscribed');
-        default:
-          return await fastify.db.memberTypes.change(request.params.id, request.body);
+      if (types) {
+        return await fastify.db.memberTypes.change(
+          request.params.id,
+          request.body
+        );
+      } else {
+        throw fastify.httpErrors.createError(400, 'User not subscribed');
       }
     }
   );

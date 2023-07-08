@@ -26,11 +26,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      switch (user) {
-        case undefined:
-          throw fastify.httpErrors.createError(404, 'User not found');
-        default:
-          return user!;
+      if (user) {
+        return user;
+      } else {
+        throw fastify.httpErrors.createError(404, 'User not found');
       }
     }
   );
@@ -72,12 +71,11 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.body.userId,
       });
-      switch (user) {
-        case undefined:
-          throw fastify.httpErrors.createError(400, 'User not subscribed');
-        default:
-          user!.subscribedToUserIds.push(request.params.id);
-          return await fastify.db.users.change(request.body.userId, user!);
+      if (user) {
+        user!.subscribedToUserIds.push(request.params.id);
+        return await fastify.db.users.change(request.body.userId, user!);
+      } else {
+        throw fastify.httpErrors.createError(400, 'User not subscribed');
       }
     }
   );
@@ -95,23 +93,20 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.body.userId,
       });
-
-      switch (
+      if (
         user &&
         user.subscribedToUserIds.find((item) => item === request.params.id)
       ) {
-        case undefined:
-          throw fastify.httpErrors.createError(400, 'User not subscribed');
-        default: {
-          user!.subscribedToUserIds = user!.subscribedToUserIds.filter(
-            (i) => i !== request.params.id
-          );
-          const changedUser = await fastify.db.users.change(
-            request.body.userId,
-            user!
-          );
-          return changedUser;
-        }
+        user!.subscribedToUserIds = user!.subscribedToUserIds.filter(
+          (i) => i !== request.params.id
+        );
+        const changedUser = await fastify.db.users.change(
+          request.body.userId,
+          user!
+        );
+        return changedUser;
+      } else {
+        throw fastify.httpErrors.createError(400, 'User not subscribed');
       }
     }
   );
@@ -129,11 +124,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      switch (user) {
-        case undefined:
-          throw fastify.httpErrors.createError(400, 'User not subscribed');
-        default:
-          return await fastify.db.users.change(request.params.id, request.body);
+      if (user) {
+        return await fastify.db.users.change(request.params.id, request.body);
+      } else {
+        throw fastify.httpErrors.createError(400, 'User not subscribed');
       }
     }
   );

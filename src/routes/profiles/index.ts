@@ -18,15 +18,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<ProfileEntity> {
-      const user = await fastify.db.profiles.findOne({
+      const profiles = await fastify.db.profiles.findOne({
         key: 'id',
         equals: request.params.id,
       });
-      switch (user) {
-        case undefined:
-          throw fastify.httpErrors.createError(404, 'User not found');
-        default:
-          return user!;
+      if (profiles) {
+        return profiles;
+      } else {
+        throw fastify.httpErrors.createError(404, 'User not found');
       }
     }
   );
@@ -64,18 +63,17 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<ProfileEntity> {
-      const user = await fastify.db.profiles.findOne({
+      const profiles = await fastify.db.profiles.findOne({
         key: 'id',
         equals: request.params.id,
       });
-      switch (user) {
-        case undefined:
-          throw fastify.httpErrors.createError(400, 'User not subscribed');
-        default:
-          return await fastify.db.profiles.change(
-            request.params.id,
-            request.body
-          );
+      if (profiles) {
+        return await fastify.db.profiles.change(
+          request.params.id,
+          request.body
+        );
+      } else {
+        throw fastify.httpErrors.createError(400, 'User not subscribed');
       }
     }
   );
