@@ -11,13 +11,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
   fastify.get('/', async function (request, reply): Promise<UserEntity[]> {
-    const users = await fastify.db.users.findMany();
-    switch (users) {
-      case undefined:
-        throw fastify.httpErrors.createError(404, 'User not found');
-      default:
-        return users!;
-    }
+    return await fastify.db.users.findMany();
   });
 
   fastify.get(

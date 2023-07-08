@@ -6,7 +6,9 @@ import type { PostEntity } from '../../utils/DB/entities/DBPosts';
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
-  fastify.get('/', async function (request, reply): Promise<PostEntity[]> {});
+  fastify.get('/', async function (request, reply): Promise<PostEntity[]> {
+    return await fastify.db.posts.findMany();
+  });
 
   fastify.get(
     '/:id',
@@ -15,7 +17,18 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function (request, reply): Promise<PostEntity> {
+      const user = await fastify.db.posts.findOne({
+        key: 'id',
+        equals: request.params.id,
+      });
+      switch (user) {
+        case undefined:
+          throw fastify.httpErrors.createError(404, 'User not found');
+        default:
+          return user!;
+      }
+    }
   );
 
   fastify.post(
@@ -25,7 +38,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: createPostBodySchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function (request, reply): Promise<PostEntity> {
+      return await fastify.db.posts.create(request.body);
+    }
   );
 
   fastify.delete(
@@ -35,7 +50,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function (request, reply): Promise<PostEntity> {
+      return await fastify.db.posts.delete(request.params.id);
+    }
   );
 
   fastify.patch(
@@ -46,7 +63,18 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function (request, reply): Promise<PostEntity> {
+      const user = await fastify.db.posts.findOne({
+        key: 'id',
+        equals: request.params.id,
+      });
+      switch (user) {
+        case undefined:
+          throw fastify.httpErrors.createError(400, 'User not subscribed');
+        default:
+          return await fastify.db.posts.change(request.params.id, request.body);
+      }
+    }
   );
 };
 
