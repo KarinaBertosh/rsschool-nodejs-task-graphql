@@ -48,6 +48,12 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
+      const post = await fastify.db.posts.findOne({
+        key: 'id',
+        equals: request.params.id,
+      });
+      if (!post) throw fastify.httpErrors.createError(400, 'Post not found');
+      
       return await fastify.db.posts.delete(request.params.id);
     }
   );
