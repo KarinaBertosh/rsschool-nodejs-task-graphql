@@ -22,11 +22,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      if (profiles) {
-        return profiles;
-      } else {
-        throw fastify.httpErrors.createError(404, 'User not found');
-      }
+      if (!profiles)
+        throw fastify.httpErrors.createError(404, 'Profile not found');
+
+      return profiles;
     }
   );
 
@@ -67,14 +66,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      if (profiles) {
-        return await fastify.db.profiles.change(
-          request.params.id,
-          request.body
-        );
-      } else {
-        throw fastify.httpErrors.createError(400, 'User not subscribed');
-      }
+      if (!profiles)
+        throw fastify.httpErrors.createError(400, 'Profile not found');
+
+      return await fastify.db.profiles.change(request.params.id, request.body);
     }
   );
 };

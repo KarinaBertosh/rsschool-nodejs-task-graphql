@@ -26,11 +26,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      if (user) {
-        return user;
-      } else {
-        throw fastify.httpErrors.createError(404, 'User not found');
-      }
+      if (!user) throw fastify.httpErrors.createError(404, 'User not found');
+
+      return user;
     }
   );
 
@@ -54,7 +52,42 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      return await fastify.db.users.delete(request.params.id);
+      const user = await fastify.db.users.findOne({
+        key: 'id',
+        equals: request.params.id,
+      });
+      const users = await fastify.db.users.findMany();
+
+      if (!user)
+        throw fastify.httpErrors.createError(400, 'User not found');
+
+      const profile = await fastify.db.profiles.findOne({
+        key: 'userId',
+        equals: user.id,
+      });
+
+      const posts = await fastify.db.posts.findMany({
+        key: 'userId',
+        equals: user.id,
+      });
+
+      profile && (await fastify.db.profiles.delete(profile.id));
+
+      posts.forEach(async (p: any) => {
+        await fastify.db.posts.delete(p.id);
+      });
+
+      for (const us of users) {
+        const userSub = us.subscribedToUserIds.find((i) => i === user.id);
+        if (userSub) {
+          us.subscribedToUserIds = us.subscribedToUserIds.filter(
+            (i) => i !== user.id
+          );
+          await fastify.db.users.change(user.id, us);
+        }
+      }
+
+      return await fastify.db.users.delete(user.id);
     }
   );
 
@@ -71,12 +104,11 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.body.userId,
       });
-      if (user) {
-        user!.subscribedToUserIds.push(request.params.id);
-        return await fastify.db.users.change(request.body.userId, user!);
-      } else {
+      if (!user)
         throw fastify.httpErrors.createError(400, 'User not subscribed');
-      }
+
+      user!.subscribedToUserIds.push(request.params.id);
+      return await fastify.db.users.change(request.body.userId, user!);
     }
   );
 
@@ -93,21 +125,20 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.body.userId,
       });
-      if (
-        user &&
-        user.subscribedToUserIds.find((item) => item === request.params.id)
-      ) {
-        user!.subscribedToUserIds = user!.subscribedToUserIds.filter(
-          (i) => i !== request.params.id
-        );
-        const changedUser = await fastify.db.users.change(
-          request.body.userId,
-          user!
-        );
-        return changedUser;
-      } else {
+
+      if (!user)
+        throw fastify.httpErrors.createError(400, 'User not found');
+      if (!user.subscribedToUserIds.find((item) => item === request.params.id))
         throw fastify.httpErrors.createError(400, 'User not subscribed');
-      }
+
+      user.subscribedToUserIds = user.subscribedToUserIds.filter(
+        (i) => i !== request.params.id
+      );
+      const changedUser = await fastify.db.users.change(
+        request.body.userId,
+        user
+      );
+      return changedUser;
     }
   );
 
@@ -124,11 +155,11 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'id',
         equals: request.params.id,
       });
-      if (user) {
-        return await fastify.db.users.change(request.params.id, request.body);
-      } else {
-        throw fastify.httpErrors.createError(400, 'User not subscribed');
-      }
+
+      if (!user)
+        throw fastify.httpErrors.createError(400, 'User not found');
+
+      return await fastify.db.users.change(request.params.id, request.body);
     }
   );
 };

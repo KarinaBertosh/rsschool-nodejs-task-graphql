@@ -18,15 +18,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      const posts = await fastify.db.posts.findOne({
+      const post = await fastify.db.posts.findOne({
         key: 'id',
         equals: request.params.id,
       });
-      if (posts) {
-        return posts;
-      } else {
-        throw fastify.httpErrors.createError(404, 'User not found');
-      }
+      if (!post) throw fastify.httpErrors.createError(404, 'Post not found');
+
+      return post;
     }
   );
 
@@ -63,15 +61,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      const posts = await fastify.db.posts.findOne({
+      const post = await fastify.db.posts.findOne({
         key: 'id',
         equals: request.params.id,
       });
-      if (posts) {
-        return await fastify.db.posts.change(request.params.id, request.body);
-      } else {
-        throw fastify.httpErrors.createError(400, 'User not subscribed');
-      }
+      if (!post) throw fastify.httpErrors.createError(400, 'Post not found');
+
+      return await fastify.db.posts.change(request.params.id, request.body);
     }
   );
 };
