@@ -1,98 +1,101 @@
-import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
-import { idParamSchema } from '../../utils/reusedSchemas';
-import { createProfileBodySchema, changeProfileBodySchema } from './schema';
-import type { ProfileEntity } from '../../utils/DB/entities/DBProfiles';
+import { FastifyPluginAsyncTypebox, Type } from '@fastify/type-provider-typebox';
+import {
+  changeProfileByIdSchema,
+  createProfileSchema,
+  getProfileByIdSchema,
+  profileSchema,
+} from './schemas.js';
 
-const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
-  fastify
-): Promise<void> => {
-  fastify.get('/', async function (request, reply): Promise<ProfileEntity[]> {
-    return await fastify.db.profiles.findMany();
+const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
+  const { prisma, httpErrors } = fastify;
+
+  fastify.route({
+    url: '/',
+    method: 'GET',
+    schema: {
+      response: {
+        200: Type.Array(profileSchema),
+      },
+    },
+    async handler() {
+      return prisma.profile.findMany();
+    },
   });
 
-  fastify.get(
-    '/:id',
-    {
-      schema: {
-        params: idParamSchema,
+  fastify.route({
+    url: '/:profileId',
+    method: 'GET',
+    schema: {
+      ...getProfileByIdSchema,
+      response: {
+        200: profileSchema,
+        404: Type.Null(),
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {
-      const profiles = await fastify.db.profiles.findOne({
-        key: 'id',
-        equals: request.params.id,
+    async handler(req) {
+      const profile = await prisma.profile.findUnique({
+        where: {
+          id: req.params.profileId,
+        },
       });
-      if (!profiles)
-        throw fastify.httpErrors.createError(404, 'Profile not found');
+      if (profile === null) {
+        throw httpErrors.notFound();
+      }
+      return profile;
+    },
+  });
 
-      return profiles;
-    }
-  );
-
-  fastify.post(
-    '/',
-    {
-      schema: {
-        body: createProfileBodySchema,
+  fastify.route({
+    url: '/',
+    method: 'POST',
+    schema: {
+      ...createProfileSchema,
+      response: {
+        200: profileSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {
-      return await fastify.db.profiles.create(request.body);
-      // const type = await fastify.db.memberTypes.findOne({
-      //   key: 'id',
-      //   equals: request.body.memberTypeId,
-      // });
-      // if (!type) throw fastify.httpErrors.createError(404, 'Type not found');
-
-      // const profile = await fastify.db.profiles.findOne({
-      //   key: 'userId',
-      //   equals: request.body.userId,
-      // });
-
-      // if (!profile) return await fastify.db.profiles.create(request.body);
-
-      // throw fastify.httpErrors.createError(404, 'Profile already exist');
-    }
-  );
-
-  fastify.delete(
-    '/:id',
-    {
-      schema: {
-        params: idParamSchema,
-      },
-    },
-    async function (request, reply): Promise<ProfileEntity> {
-      const profile = await fastify.db.profiles.findOne({
-        key: 'id',
-        equals: request.params.id,
+    async handler(req) {
+      return prisma.profile.create({
+        data: req.body,
       });
-      if (!profile)
-        throw fastify.httpErrors.createError(400, 'Profile not found');
+    },
+  });
 
-      return await fastify.db.profiles.delete(request.params.id);
-    }
-  );
-
-  fastify.patch(
-    '/:id',
-    {
-      schema: {
-        body: changeProfileBodySchema,
-        params: idParamSchema,
+  fastify.route({
+    url: '/:profileId',
+    method: 'PATCH',
+    schema: {
+      ...changeProfileByIdSchema,
+      response: {
+        200: profileSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {
-      const profiles = await fastify.db.profiles.findOne({
-        key: 'id',
-        equals: request.params.id,
+    async handler(req) {
+      return prisma.profile.update({
+        where: { id: req.params.profileId },
+        data: req.body,
       });
-      if (!profiles)
-        throw fastify.httpErrors.createError(400, 'Profile not found');
+    },
+  });
 
-      return await fastify.db.profiles.change(request.params.id, request.body);
-    }
-  );
+  fastify.route({
+    url: '/:profileId',
+    method: 'DELETE',
+    schema: {
+      ...getProfileByIdSchema,
+      response: {
+        204: Type.Void(),
+      },
+    },
+    async handler(req, reply) {
+      void reply.code(204);
+      await prisma.profile.delete({
+        where: {
+          id: req.params.profileId,
+        },
+      });
+    },
+  });
 };
 
 export default plugin;

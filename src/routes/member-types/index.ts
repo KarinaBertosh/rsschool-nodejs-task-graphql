@@ -1,56 +1,44 @@
-import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
-import { idParamSchema } from '../../utils/reusedSchemas';
-import { changeMemberTypeBodySchema } from './schema';
-import type { MemberTypeEntity } from '../../utils/DB/entities/DBMemberTypes';
+import { FastifyPluginAsyncTypebox, Type } from '@fastify/type-provider-typebox';
+import { getMemberTypeByIdSchema, memberTypeSchema } from './schemas.js';
 
-const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
-  fastify
-): Promise<void> => {
-  fastify.get('/', async function (request, reply): Promise<
-    MemberTypeEntity[]
-  > {
-    return await fastify.db.memberTypes.findMany();
+const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
+  const { prisma, httpErrors } = fastify;
+
+  fastify.route({
+    url: '/',
+    method: 'GET',
+    schema: {
+      response: {
+        200: Type.Array(memberTypeSchema),
+      },
+    },
+    async handler() {
+      return prisma.memberType.findMany();
+    },
   });
 
-  fastify.get(
-    '/:id',
-    {
-      schema: {
-        params: idParamSchema,
+  fastify.route({
+    url: '/:memberTypeId',
+    method: 'GET',
+    schema: {
+      ...getMemberTypeByIdSchema,
+      response: {
+        200: memberTypeSchema,
+        404: Type.Null(),
       },
     },
-    async function (request, reply): Promise<MemberTypeEntity> {
-      const type = await fastify.db.memberTypes.findOne({
-        key: 'id',
-        equals: request.params.id,
+    async handler(req) {
+      const memberType = await prisma.memberType.findUnique({
+        where: {
+          id: req.params.memberTypeId,
+        },
       });
-      if (!type) throw fastify.httpErrors.createError(404, 'Type not found');
-
-      return type;
-    }
-  );
-
-  fastify.patch(
-    '/:id',
-    {
-      schema: {
-        body: changeMemberTypeBodySchema,
-        params: idParamSchema,
-      },
+      if (memberType === null) {
+        throw httpErrors.notFound();
+      }
+      return memberType;
     },
-    async function (request, reply): Promise<MemberTypeEntity> {
-      const type = await fastify.db.memberTypes.findOne({
-        key: 'id',
-        equals: request.params.id,
-      });
-      if (!type) throw fastify.httpErrors.createError(400, 'Type not found');
-
-      return await fastify.db.memberTypes.change(
-        request.params.id,
-        request.body
-      );
-    }
-  );
+  });
 };
 
 export default plugin;
