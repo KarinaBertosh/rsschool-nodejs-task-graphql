@@ -77,7 +77,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
             },
           },
           resolve: (_source, { id }: { id: string; }) => {
-            return prisma.user.findUnique({ where: { id } });
+            return prisma.user.findUnique({
+              where: { id },
+              include: { profile: { include: { memberType: true } }, posts: true },
+            });
           },
         },
         profile: {
@@ -88,7 +91,9 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
             },
           },
           resolve: ( _source, { id }: { id: string; }) => {
-            return prisma.profile.findUnique({ where: { id } });
+            return prisma.profile.findUnique({ where: { id }, 
+              include: { memberType: true },
+             });
           },
         },
       }
