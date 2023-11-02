@@ -2,6 +2,12 @@ import { GraphQLObjectType, GraphQLFloat, GraphQLString, GraphQLList } from 'gra
 import { UUIDType } from './uuid.js';
 import { ProfileType } from './profiles.js';
 import { PostType } from './posts.js';
+import { Context } from './common.js';
+
+
+interface ISource {
+  id: string;
+}
 
 export const UserType = new GraphQLObjectType({
   name: 'UserType',
@@ -9,7 +15,15 @@ export const UserType = new GraphQLObjectType({
     id: { type: UUIDType },
     name: { type: GraphQLString },
     balance: { type: GraphQLFloat },
-    profile: { type: ProfileType },
-    posts: {type: new GraphQLList(PostType)}
+    profile: {
+      type: ProfileType,
+      resolve: (source: ISource, _args, { prisma }: Context) =>
+        prisma.profile.findUnique({ where: { userId: source.id } }),
+    },
+    posts: {
+      type: new GraphQLList(PostType),
+      resolve: (source: ISource, _args, { prisma }: Context) =>
+        prisma.post.findMany({ where: { authorId: source.id } }),
+    },
   }),
 });
