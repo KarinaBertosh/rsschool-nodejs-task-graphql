@@ -7,9 +7,10 @@ Constraints and logic for gql queries should be done based on restful implementa
 
 
 Steps to get started:
-1. Install dependencies: npm ci
-2. Create .env file (based on .env.example): ./.env
-3. Create db file: ./prisma/database.db
-4. Apply pending migrations: npx prisma migrate deploy
-5. Seed db: npx prisma db seed
-6. Start server: npm run start
+1. Switch to branch develop
+2. Install dependencies: npm ci
+3. Create .env file (based on .env.example): ./.env
+4. Create db file: ./prisma/database.db
+5. Apply pending migrations: npx prisma migrate deploy
+6. Seed db: npx prisma db seed
+7. Start server: npm run start
