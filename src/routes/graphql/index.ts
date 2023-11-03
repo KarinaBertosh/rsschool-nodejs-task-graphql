@@ -9,10 +9,11 @@ import {
   graphql,
 } from 'graphql';
 import { MemberType, MemberTypeId } from './types/member-types.js';
-import { PostType } from './types/posts.js';
-import { UserType } from './types/users.js';
-import { ProfileType } from './types/profiles.js';
+import { PostCreateType, PostType } from './types/posts.js';
+import { UserCreateType, UserType } from './types/users.js';
+import { ProfileCreateType, ProfileType } from './types/profiles.js';
 import { UUIDType } from './types/uuid.js';
+import { MemberTypeId as MemberIdType} from '../member-types/schemas.js';
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   const prisma = new PrismaClient();
@@ -89,14 +90,64 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
               type: new GraphQLNonNull(UUIDType),
             },
           },
-          resolve: ( prevState, { id }: { id: string; }) => {
-            return prisma.profile.findUnique({ where: { id }, 
+          resolve: (prevState, { id }: { id: string; }) => {
+            return prisma.profile.findUnique({
+              where: { id },
               include: { memberType: true },
-             });
+            });
           },
         },
       }
+    }),
+
+    mutation: new GraphQLObjectType({
+      name: 'RootMutation',
+      fields: {
+        createPost: {
+          type: PostType,
+          args: { dto: { type: new GraphQLNonNull(PostCreateType) } },
+          resolve: (
+            prevState,
+            { dto }: { dto: { authorId: string; title: string; content: string; }; },
+            _context,
+          ) => {
+            return prisma.post.create({ data: dto });
+          },
+        },
+        createUser: {
+          type: UserType,
+          args: { dto: { type: new GraphQLNonNull(UserCreateType) } },
+          resolve: (
+            prevState,
+            { dto }: { dto: { name: string; balance: number; }; },
+            _context,
+          ) => {
+            return prisma.user.create({ data: dto });
+          },
+        },
+        createProfile: {
+          type: ProfileType,
+          args: { dto: { type: new GraphQLNonNull(ProfileCreateType) } },
+          resolve: (
+            prevState,
+            { dto }: {
+              dto: {
+                userId: string;
+                memberTypeId: MemberIdType;
+                isMale: boolean;
+                yearOfBirth: number;
+              };
+            },
+            _context,
+          ) => {
+            return prisma.profile.create({ data: dto });
+          },
+        },
+      },
     })
+
+
+
   });
 
   fastify.route({
@@ -109,13 +160,15 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async handler(req) {
+      const { query, variables } = req.body;
+      
       const result = await graphql({
         schema,
         contextValue: {
           prisma,
         },
-        source: req.body.query,
-        variableValues: req.body.variables,
+        source: query,
+        variableValues: variables,
       });
 
       return result;
