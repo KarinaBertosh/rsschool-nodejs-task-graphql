@@ -7,13 +7,15 @@ import {
   GraphQLList,
   GraphQLNonNull,
   graphql,
+  GraphQLString,
 } from 'graphql';
 import { MemberType, MemberTypeId } from './types/member-types.js';
 import { CreatePostInput, PostType } from './types/posts.js';
 import { CreateUserInput, UserType } from './types/users.js';
 import { CreateProfileInput, ProfileType } from './types/profiles.js';
 import { UUIDType } from './types/uuid.js';
-import { MemberTypeId as MemberIdType} from '../member-types/schemas.js';
+import { MemberTypeId as MemberIdType } from '../member-types/schemas.js';
+
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   const prisma = new PrismaClient();
@@ -143,6 +145,37 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
             return prisma.profile.create({ data: dto });
           },
         },
+
+        deleteProfile: {
+          type: GraphQLString,
+          args: { id: { type: new GraphQLNonNull(UUIDType) } },
+          resolve: async (
+            prevState, { id }: { id: string; }, _context,
+          ) => {
+            await prisma.profile.delete({ where: { id } });
+            return null;
+          },
+        },
+        deletePost: {
+          type: GraphQLString,
+          args: { id: { type: new GraphQLNonNull(UUIDType) } },
+          resolve: async (
+            prevState, { id }: { id: string; }, _context,
+          ) => {
+            await prisma.post.delete({ where: { id } });
+            return null;
+          },
+        },
+        deleteUser: {
+          type: GraphQLString,
+          args: { id: { type: new GraphQLNonNull(UUIDType) } },
+          resolve: async (
+            prevState, { id }: { id: string; }, _context,
+          ) => {
+            await prisma.user.delete({ where: { id } });
+            return null;
+          },
+        },
       },
     }),
   });
@@ -158,7 +191,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async handler(req) {
       const { query, variables } = req.body;
-      
+
       const result = await graphql({
         schema,
         contextValue: {
