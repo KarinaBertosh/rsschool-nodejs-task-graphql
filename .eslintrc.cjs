@@ -20,6 +20,7 @@ module.exports = {
   rules: {
     '@typescript-eslint/require-await': 0,
     '@typescript-eslint/ban-ts-comment': 0,
+    '@typescript-eslint/no-unsafe-assignment': 'off',
     '@typescript-eslint/no-misused-promises': [
       2,
       {
