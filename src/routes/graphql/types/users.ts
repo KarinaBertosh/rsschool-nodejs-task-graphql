@@ -28,10 +28,10 @@ export const UserType = new GraphQLObjectType({
   }),
 });
 
-export const UserCreateType = new GraphQLInputObjectType({
-  name: 'UserCreateType',
+export const CreateUserInput = new GraphQLInputObjectType({
+  name: 'CreateUserInput',
   fields: () => ({
-    name: { type: GraphQLString },
+    name: { type: UUIDType },
     balance: { type: GraphQLFloat  },
   }),
 });

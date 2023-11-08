@@ -22,8 +22,8 @@ export const ProfileType = new GraphQLObjectType({
   }),
 });
 
-export const ProfileCreateType = new GraphQLInputObjectType({
-  name: 'ProfileCreateType',
+export const CreateProfileInput = new GraphQLInputObjectType({
+  name: 'CreateProfileInput',
   fields: () => ({
     userId: { type: UUIDType },
     memberTypeId: { type: MemberTypeId },

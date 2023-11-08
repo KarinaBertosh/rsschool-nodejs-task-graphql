@@ -9,9 +9,9 @@ import {
   graphql,
 } from 'graphql';
 import { MemberType, MemberTypeId } from './types/member-types.js';
-import { PostCreateType, PostType } from './types/posts.js';
-import { UserCreateType, UserType } from './types/users.js';
-import { ProfileCreateType, ProfileType } from './types/profiles.js';
+import { CreatePostInput, PostType } from './types/posts.js';
+import { CreateUserInput, UserType } from './types/users.js';
+import { CreateProfileInput, ProfileType } from './types/profiles.js';
 import { UUIDType } from './types/uuid.js';
 import { MemberTypeId as MemberIdType} from '../member-types/schemas.js';
 
@@ -101,11 +101,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     }),
 
     mutation: new GraphQLObjectType({
-      name: 'RootMutation',
+      name: 'RootMutationType',
       fields: {
         createPost: {
           type: PostType,
-          args: { dto: { type: new GraphQLNonNull(PostCreateType) } },
+          args: { dto: { type: new GraphQLNonNull(CreatePostInput) } },
           resolve: (
             prevState,
             { dto }: { dto: { authorId: string; title: string; content: string; }; },
@@ -116,7 +116,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         },
         createUser: {
           type: UserType,
-          args: { dto: { type: new GraphQLNonNull(UserCreateType) } },
+          args: { dto: { type: new GraphQLNonNull(CreateUserInput) } },
           resolve: (
             prevState,
             { dto }: { dto: { name: string; balance: number; }; },
@@ -127,7 +127,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         },
         createProfile: {
           type: ProfileType,
-          args: { dto: { type: new GraphQLNonNull(ProfileCreateType) } },
+          args: { dto: { type: new GraphQLNonNull(CreateProfileInput) } },
           resolve: (
             prevState,
             { dto }: {
@@ -144,10 +144,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           },
         },
       },
-    })
-
-
-
+    }),
   });
 
   fastify.route({
