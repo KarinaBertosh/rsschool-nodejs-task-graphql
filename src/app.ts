@@ -14,7 +14,7 @@ const opts: Partial<AutoloadPluginOptions> = {
     }
     return !path.endsWith('index.js');
   },
-  forceESM: true,
+  forceESM: true
 };
 
 const app: FastifyPluginAsync = async (fastify, _) => {
@@ -28,6 +28,7 @@ const app: FastifyPluginAsync = async (fastify, _) => {
     routeParams: true,
     ...opts,
   });
+  
 };
 
 export default app;

@@ -8,6 +8,8 @@ import {
   GraphQLNonNull,
   graphql,
   GraphQLString,
+  validate,
+  parse,
 } from 'graphql';
 import { MemberType, MemberTypeId } from './types/member-types.js';
 import { ChangePostInput, CreatePostInput, PostType } from './types/posts.js';
@@ -15,6 +17,9 @@ import { ChangeUserInput, CreateUserInput, UserType } from './types/users.js';
 import { ChangeProfileInput, CreateProfileInput, ProfileType } from './types/profiles.js';
 import { UUIDType } from './types/uuid.js';
 import { MemberTypeId as MemberIdType } from '../member-types/schemas.js';
+import depthLimit from 'graphql-depth-limit';
+
+const DEPTH_LIMIT = 5;
 
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -242,7 +247,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           },
           resolve: async (
             prevState,
-            { userId, authorId }: { userId: string; authorId: string; }, ////
+            { userId, authorId }: { userId: string; authorId: string; },
             _context,
           ) => {
             await prisma.subscribersOnAuthors.delete(
@@ -254,7 +259,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
                   }
                 }
               });
-              return null;
+            return null;
           },
         },
 
@@ -273,6 +278,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     async handler(req) {
       const { query, variables } = req.body;
+      const parsedQuery = parse(query);
+      const errorChecking = validate(schema, parsedQuery, [depthLimit(DEPTH_LIMIT)]);
+
+      if (errorChecking.length > 0) return { data: null, errors: errorChecking };
 
       const result = await graphql({
         schema,
