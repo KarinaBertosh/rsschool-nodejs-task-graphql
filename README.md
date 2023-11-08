@@ -1,9 +1,9 @@
 ## Assignment: Graphql
 
-Added logic to the graphql endpoint: ./src/routes/graphql.  
+Added logic to the graphql endpoint: ***./src/routes/graphql***.  
 Constraints and logic for gql queries should be done based on restful implementation.  
-   1. Implemented "npm run test-queries"
-   2. Implemented "npm run test-mutations"    
+   1. Implemented configuration of queries and mutations. You can check this by running ***npm run test-queries*** и ***npm run test-mutations***
+   2. Implemented limiting the complexity of Graphql queries based on their depth. You can check this by running ***npm run test-rule***
 
 
 Steps to get started:
