@@ -31,3 +31,12 @@ export const CreateProfileInput = new GraphQLInputObjectType({
     yearOfBirth: { type: GraphQLInt }
   }),
 });
+
+export const ChangeProfileInput = new GraphQLInputObjectType({
+  name: 'ChangeProfileInput',
+  fields: () => ({
+    memberTypeId: { type: MemberTypeId },
+    isMale: { type: GraphQLBoolean },
+    yearOfBirth: { type: GraphQLInt }
+  }),
+});

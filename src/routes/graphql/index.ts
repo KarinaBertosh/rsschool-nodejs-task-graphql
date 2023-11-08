@@ -10,9 +10,9 @@ import {
   GraphQLString,
 } from 'graphql';
 import { MemberType, MemberTypeId } from './types/member-types.js';
-import { CreatePostInput, PostType } from './types/posts.js';
-import { CreateUserInput, UserType } from './types/users.js';
-import { CreateProfileInput, ProfileType } from './types/profiles.js';
+import { ChangePostInput, CreatePostInput, PostType } from './types/posts.js';
+import { ChangeUserInput, CreateUserInput, UserType } from './types/users.js';
+import { ChangeProfileInput, CreateProfileInput, ProfileType } from './types/profiles.js';
 import { UUIDType } from './types/uuid.js';
 import { MemberTypeId as MemberIdType } from '../member-types/schemas.js';
 
@@ -176,6 +176,50 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
             return null;
           },
         },
+
+        changePost: {
+          type: PostType,
+          args: {
+            id: { type: new GraphQLNonNull(UUIDType) },
+            dto: { type: new GraphQLNonNull(ChangePostInput) }
+          },
+          resolve: (
+            prevState,
+            { id, dto }: { id: string, dto: { title: string; content: string; }; },
+            _context,
+          ) => {
+            return prisma.post.update({ where: { id }, data: dto });
+          },
+        },
+        changeProfile: {
+          type: ProfileType,
+          args: {
+            id: { type: new GraphQLNonNull(UUIDType) },
+            dto: { type: new GraphQLNonNull(ChangeProfileInput) }
+          },
+          resolve: (
+            prevState,
+            { id, dto }: { id: string, dto: { memberTypeId: MemberIdType; isMale: boolean; yearOfBirth: number; }; },
+            _context,
+          ) => {
+            return prisma.profile.update({ where: { id }, data: dto });
+          },
+        },
+        changeUser: {
+          type: UserType,
+          args: {
+            id: { type: new GraphQLNonNull(UUIDType) },
+            dto: { type: new GraphQLNonNull(ChangeUserInput) }
+          },
+          resolve: (
+            prevState,
+            { id, dto }: { id: string, dto: { name: string; balance: number; }; },
+            _context,
+          ) => {
+            return prisma.user.update({ where: { id }, data: dto });
+          },
+        },
+
       },
     }),
   });
